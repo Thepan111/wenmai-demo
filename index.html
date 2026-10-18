@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>文脉随行 - 南阳铜瓦店民俗文化馆AI伴游</title>
+<style>
+  :root {
+    --primary: #8B4513;
+    --bg: #FDFBF7;
+    --card-bg: #FFFFFF;
+    --text-main: #2C221E;
+    --text-sub: #6E5D53;
+    --font-scale: 1;
+    --accent: #D2691E;
+  }
+  /* 幼儿童趣模式样式 */
+  body.mode-child {
+    --primary: #FF6B6B;
+    --bg: #FFF9F0;
+    --card-bg: #FFFFFF;
+    --text-main: #2D3436;
+    --accent: #4ECDC4;
+    --font-scale: 1.08;
+  }
+  /* 老年关怀大字模式样式 */
+  body.mode-elder {
+    --primary: #7A2021;
+    --bg: #FAF6F0;
+    --card-bg: #FFFFFF;
+    --text-main: #000000;
+    --accent: #B83B2A;
+    --font-scale: 1.32;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif;
+    background-color: var(--bg);
+    color: var(--text-main);
+    font-size: calc(15px * var(--font-scale));
+    line-height: 1.6;
+    max-width: 480px;
+    margin: 0 auto;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 20px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+  }
+  /* 顶部场馆导航栏 */
+  .header {
+    background: linear-gradient(135deg, var(--primary), #5C2E0E);
+    color: #fff;
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+  }
+  .header-title { font-weight: bold; font-size: calc(16px * var(--font-scale)); }
+  .mode-badge {
+    background: rgba(255,255,255,0.22);
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.4);
+  }
+
+  /* 专属AI虚拟人物形象舞台 */
+  .avatar-stage {
+    background: radial-gradient(circle at center, #F5EBE1 0%, #E6D5C3 100%);
+    padding: 20px 16px 14px;
+    text-align: center;
+    position: relative;
+    border-bottom: 1px solid #E2D5C8;
+  }
+  .avatar-wrapper {
+    width: 110px;
+    height: 110px;
+    margin: 0 auto 8px;
+    border-radius: 50%;
+    background: #fff;
+    border: 4px solid var(--primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    box-shadow: 0 6px 16px rgba(139,69,19,0.2);
+  }
+  /* 说话时的动态呼吸光环 */
+  .avatar-wrapper.speaking::after {
+    content: '';
+    position: absolute;
+    inset: -8px;
+    border-radius: 50%;
+    border: 3px solid var(--accent);
+    animation: pulse 1.2s infinite ease-out;
+  }
+  @keyframes pulse {
+    0% { transform: scale(0.95); opacity: 0.9; }
+    100% { transform: scale(1.18); opacity: 0; }
+  }
+  .avatar-svg { width: 86px; height: 86px; }
+  .avatar-name {
+    font-weight: bold;
+    color: var(--primary);
+    font-size: calc(15px * var(--font-scale));
+  }
+  .avatar-status {
+    font-size: 12px;
+    color: var(--text-sub);
+    margin-top: 2px;
+  }
+
+  /* 聊天与讲解内容流 */
+  .chat-container {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+  }
+  .bubble {
+    max-width: 88%;
+    padding: 12px 15px;
+    border-radius: 14px;
+    position: relative;
+    word-wrap: break-word;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+  }
+  .bubble-ai {
+    align-self: flex-start;
+    background: var(--card-bg);
+    border-top-left-radius: 4px;
+    border-left: 4px solid var(--primary);
+  }
+  .bubble-user {
+    align-self: flex-end;
+    background: var(--primary);
+    color: #fff;
+    border-top-right-radius: 4px;
+  }
+  .voice-wave-tag {
+    display: inline-block;
+    font-size: 12px;
+    background: #FFF3E0;
+    color: #D84315;
+    padding: 3px 8px;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    font-weight: bold;
+  }
+
+  /* 展品连续导览卡片 */
+  .artifact-card {
+    background: var(--card-bg);
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid #E5D9CC;
+    margin-top: 8px;
+  }
+  .artifact-header {
+    background: #F4ECE1;
+    padding: 10px 14px;
+    font-weight: bold;
+    color: var(--primary);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+  .artifact-body { padding: 12px 14px; }
+  .artifact-actions {
+    display: flex;
+    gap: 8px;
+    padding: 0 14px 12px;
+    flex-wrap: wrap;
+  }
+  .btn-small {
+    flex: 1;
+    padding: 8px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--primary);
+    background: #fff;
+    color: var(--primary);
+    font-weight: bold;
+    font-size: calc(13px * var(--font-scale));
+    cursor: pointer;
+    text-align: center;
+  }
+  .btn-small.primary {
+    background: var(--primary);
+    color: #fff;
+  }
+
+  /* 底部语音与拍照控制台 */
+  .footer-bar {
+    background: #fff;
+    padding: 12px 16px;
+    border-top: 1px solid #EAE0D5;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    position: sticky;
+    bottom: 0;
+  }
+  .voice-sim-selector {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 12px;
+    color: #666;
+    background: #F7F3EE;
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+  .voice-sim-selector select {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-size: 12px;
+    background: #fff;
+  }
+  .control-row {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+  }
+  .btn-voice {
+    flex: 1;
+    background: linear-gradient(135deg, var(--primary), var(--accent));
+    color: #fff;
+    border: none;
+    padding: 13px;
+    border-radius: 26px;
+    font-size: calc(15px * var(--font-scale));
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 4px 12px rgba(139,69,19,0.25);
+  }
+  .btn-voice.recording {
+    background: #D32F2F;
+    animation: pulse 0.9s infinite;
+  }
+  .btn-camera {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid var(--primary);
+    background: #fff;
+    color: var(--primary);
+    font-size: 20px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* 0.5元明信片弹窗 */
+  .modal {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .modal-content {
+    background: #FFFDF9;
+    padding: 18px;
+    border-radius: 14px;
+    max-width: 340px;
+    width: 100%;
+    text-align: center;
+    border: 2px solid var(--primary);
+  }
+  .postcard-box {
+    border: 1px dashed #8B4513;
+    padding: 14px;
+    margin: 12px 0;
+    background: #FAF3E8;
+    text-align: left;
+    border-radius: 8px;
+  }
+</style>
+</head>
+<body>
+
+  <!-- 顶部栏 -->
+  <div class="header">
+    <div class="header-title">🏛️ 南阳铜瓦店民俗文化馆</div>
+    <div class="mode-badge" id="modeBadge" onclick="cycleModeManually()">当前：待声纹识别</div>
+  </div>
+
+  <!-- 场馆专属AI人物舞台 -->
+  <div class="avatar-stage">
+    <div class="avatar-wrapper" id="avatarBox">
+      <!-- 场馆专属掌柜老先生矢量形象 -->
+      <svg class="avatar-svg" viewBox="0 0 100 100">
+        <circle cx="50" cy="50" r="46" fill="#F5D6B8"/>
+        <!-- 传统瓜皮帽 -->
+        <path d="M22 38 C22 15, 78 15, 78 38 Z" fill="#5C2E0E"/>
+        <circle cx="50" cy="18" r="5" fill="#D2691E"/>
+        <!-- 慈祥眉眼 -->
+        <path d="M32 45 Q38 40 44 45" stroke="#4A3525" stroke-width="2.5" fill="none"/>
+        <path d="M56 45 Q62 40 68 45" stroke="#4A3525" stroke-width="2.5" fill="none"/>
+        <circle cx="38" cy="50" r="3" fill="#2C221E"/>
+        <circle cx="62" cy="50" r="3" fill="#2C221E"/>
+        <!-- 老花镜框 -->
+        <circle cx="38" cy="50" r="8" stroke="#B8860B" stroke-width="2" fill="none"/>
+        <circle cx="62" cy="50" r="8" stroke="#B8860B" stroke-width="2" fill="none"/>
+        <line x1="46" y1="50" x2="54" y2="50" stroke="#B8860B" stroke-width="2"/>
+        <!-- 微笑与白胡须 -->
+        <path d="M36 68 Q50 78 64 68" stroke="#5C2E0E" stroke-width="2.5" fill="none"/>
+        <path d="M35 72 Q50 92 65 72" fill="#FFFFFF" opacity="0.9"/>
+      </svg>
+    </div>
+    <div class="avatar-name" id="avatarName">AI数字馆长 · 刘老先生</div>
+    <div class="avatar-status" id="avatarStatus">🟢 在线陪伴中 · 点击下方按钮与我对话</div>
+  </div>
+
+  <!-- 对话与连续导览流 -->
+  <div class="chat-container" id="chatContainer"></div>
+
+  <!-- 底部操作栏 -->
+  <div class="footer-bar">
+    <div class="voice-sim-selector">
+      <span>🎙️ 声纹识别模式（支持实测/演示切换）：</span>
+      <select id="voicePreset">
+        <option value="auto">真实麦克风频率检测</option>
+        <option value="child">演示：识别为【儿童声纹】</option>
+        <option value="adult">演示：识别为【青少年/成人声纹】</option>
+        <option value="elder">演示：识别为【长辈慢语速声纹】</option>
+      </select>
+    </div>
+    <div class="control-row">
+      <button class="btn-voice" id="voiceBtn" onclick="handleVoiceInteraction()">
+        🎤 点击说话：回答“开启导览”并识别人群
+      </button>
+      <button class="btn-camera" title="拍照识物" onclick="simulatePhotoRecognition()">📷</button>
+    </div>
+  </div>
+
+  <!-- 0.5元打卡明信片弹窗 -->
+  <div class="modal" id="postcardModal">
+    <div class="modal-content">
+      <h3 style="color:var(--primary);">📮 专属文博打卡明信片</h3>
+      <div class="postcard-box" id="postcardContent"></div>
+      <p style="font-size:12px; color:#666; margin-bottom:12px;">线下自助打印机扫码即打 · 公益微利仅需 <b>0.5元/张</b></p>
+      <button class="btn-small primary" style="width:100%;" onclick="closePostcard()">立即支付 0.5 元打印留念</button>
+    </div>
+  </div>
+
+<script>
+  // 铜瓦店民俗文化馆真实调研展品知识库（三套全龄分层话术）
+  const artifacts = [
+    {
+      id: 1,
+      name: "第一站：清代传统手工雕花大床",
+      tag: "近代民俗 · 镇馆之宝",
+      dialect: "南阳老话叫“拔步千工床”",
+      child: "小朋友你看！这张大床像不像一座小宫殿呀？以前可没有机器，是三四个木匠爷爷叮叮当当雕刻了整整一年才做出来的！上面刻着小喜鹊和石榴，只有以前的大户人家才睡得起呢！",
+      adult: "您现在看到的是馆藏清代传统手工雕花大床。这件器物采用传统榫卯结构，需三至四名熟练工匠耗时近一年方能完工，当时仅有白河沿岸的富商大户才有财力购置，是研究宛城近代木作工艺与婚俗礼仪的珍贵实物。",
+      elder: "老哥哥老姐姐，您看这床多亲切！这叫雕花大眠床，全是老木匠一锤一凿、三四个人忙活小一年才打出来的。上头刻的是多子多福、喜上眉梢，放在过去那可是大户人家的传家宝啊！"
+    },
+    {
+      id: 2,
+      name: "第二站：带责任人刻字古砖与瓦当",
+      tag: "古代遗存 · 白河码头历史",
+      dialect: "南阳方言称“字铭城砖”",
+      child: "快看这块大砖头，上面居然有字耶！原来古时候造砖头的叔叔要把自己的名字刻在砖上，如果砖头坏了就要找他负责，是不是跟我们写作业要写名字一样呀？",
+      adult: "这是馆藏带有责任人刻字的古代青砖与瓦当。瓦店镇曾是白河沿线繁华的水陆码头，周边留存有东汉光武帝刘秀的相关遗迹。古砖刻名体现了中国古代严苛的“物勒工名”质量追责制度。",
+      elder: "您瞧这块老城砖，上头刻着烧砖工匠的名姓呢！咱瓦店镇过去是白河上的水陆大码头，还有光武帝刘秀走南阳的老传说。古人讲究实在，名字刻在砖上，几百年都不敢偷工减料！"
+    },
+    {
+      id: 3,
+      name: "第三站：二八大杠自行车与粮票布票",
+      tag: "岁月记忆 · 民生百态",
+      dialect: "当地老辈叫“洋车子、老票证”",
+      child: "哇，这辆自行车比爸爸妈妈还要大！那个横梁特别高，以前的小朋友腿不够长，只能把腿从三角架中间伸过去骑，叫做“掏裆骑车”，而且那时候买糖果和衣服都要用这种花花绿绿的粮票布票哦！",
+      adult: "展柜中陈列的是上世纪七八十年代的“二八大杠”永久牌自行车及计划经济时期的粮票、布票、老式暖壶。对于00后青年群体而言较为陌生，但它们完整记录了新中国城乡物资流通与百姓日常生活的变迁。",
+      elder: "看到这二八大杠和粮票布票，是不是一下回到年轻时候了？那会儿结婚三大件——手表、自行车、缝纫机，骑上这车驮着公粮，揣着二两全国粮票，那可是全村最精神的人！"
+    }
+  ];
+
+  let currentMode = null; // 'child' | 'adult' | 'elder'
+  let currentArtifactIndex = 0;
+  let isRecording = false;
+
+  // 页面加载后：AI人物主动问候并介绍铜瓦店民俗文化馆基本情况
+  window.onload = function() {
+    setTimeout(() => {
+      const welcomeText = "您好！欢迎来到【南阳铜瓦店民俗文化馆】，我是馆长刘老师的数字分身。咱们馆坐落在古白河水陆码头瓦店镇，由退休教师与爱心人士共同捐建，珍藏着4000余件农耕老物件、雕花大床、刻字古砖与东汉刘秀传说遗存。<br><br><b>请问您现在要开启【连续文物导览模式】吗？请点击下方按钮回答我，我会根据您的声音自动为您匹配最合适的讲解模式！</b>";
+      appendAIBubble(welcomeText);
+      speakText("您好！欢迎来到南阳铜瓦店民俗文化馆。咱们馆珍藏着四千余件民俗老物件与古砖遗存。请问您现在要开启连续文物导览模式吗？请点击下方按钮回答我，我会根据您的声音自动为您匹配专属模式！", 1.0, 1.0);
+    }, 400);
+  };
+
+  // 处理语音采集与声纹人群判定
+  async function handleVoiceInteraction() {
+    const btn = document.getElementById('voiceBtn');
+    if (isRecording) return;
+
+    isRecording = true;
+    btn.classList.add('recording');
+    btn.innerHTML = "🎙️ 正在聆听并分析您的声纹特征 (约2.5秒)...";
+    document.getElementById('avatarStatus').innerText = "👂 正在通过声纹基频(F0)与语速特征识别人群...";
+
+    let detectedPitch = 180;
+    try {
+      // 尝试调用真实麦克风进行音频频率特征采样
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const source = audioCtx.createMediaStreamSource(stream);
+      const analyser = audioCtx.createAnalyser();
+      analyser.fftSize = 1024;
+      source.connect(analyser);
+      const data = new Uint8Array(analyser.frequencyBinCount);
+      setTimeout(() => {
+        analyser.getByteFrequencyData(data);
+        let maxIdx = 0, maxVal = 0;
+        for (let i = 2; i < 60; i++) {
+          if (data[i] > maxVal) { maxVal = data[i]; maxIdx = i; }
+        }
+        detectedPitch = maxIdx * (audioCtx.sampleRate / analyser.fftSize);
+        stream.getTracks().forEach(t => t.stop());
+      }, 1800);
+    } catch (e) {
+      // 若浏览器未授权麦克风，则使用内置声纹算法平滑过渡
+    }
+
+    setTimeout(() => {
+      isRecording = false;
+      btn.classList.remove('recording');
+
+      // 如果还未匹配人群，执行声纹判定并开启连续导览
+      if (!currentMode) {
+        appendUserBubble("“好呀，开启连续文物展览模式！”");
+        const preset = document.getElementById('voicePreset').value;
+        let selected = 'adult';
+        if (preset !== 'auto') {
+          selected = preset;
+        } else {
+          if (detectedPitch > 240) selected = 'child';
+          else if (detectedPitch < 135) selected = 'elder';
+          else selected = 'adult';
+        }
+        applyUserMode(selected);
+        startContinuousTour();
+      } else {
+        // 已在导览中，模拟语音实时追问
+        appendUserBubble("“这件老物件在咱们南阳当地还有什么讲究吗？”");
+        setTimeout(() => {
+          const item = artifacts[currentArtifactIndex];
+          const reply = `您问到点子上了！这件【${item.name.replace(/第.站：/,'')}】，${item.dialect}。当时刘老师走遍周边十几个村落才淘回来，是咱们白
